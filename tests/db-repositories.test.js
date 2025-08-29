@@ -1,15 +1,15 @@
 import { beforeEach, expect, test, describe } from 'vitest';
-import { execa } from 'execa';
 import * as userRepository from '../src/data/user-repository.js';
 import * as todoRepository from '../src/data/todo-repository.js';
 import db from "../src/data/db.js";
 import { seedDataSimple } from './seed.js';
+import { resetDB } from '../src/utils/helpers.js';
 
 
 let seed; 
 
 beforeAll(async () => {
-  await execa`npx prisma migrate reset --force --skip-seed`;
+  await resetDB(db);
   seed = await seedDataSimple(db);
 });
 
@@ -67,23 +67,14 @@ describe('Todo Repository Tests', () => {
     expect(todo).toStrictEqual(seed.database);
   })
 
-  test('getAllTodos should return a todo of a user', async () => {
-    const todos = await todoRepository.getAllTodos(2);
+  test('getTodos should return the todos of a user based on some filters', async () => {
+    let todos = await todoRepository.getTodos({ id: 2 });
     expect(todos).toStrictEqual([seed.services, seed.routes]);
-  })
-
-  test('getTodosByStatus should return todos of a certain status', async () => {
-    const todos = await todoRepository.getTodosByStatus(2, ['COMPLETED', 'CANCELLED']);
+    todos = await todoRepository.getTodos({ id: 2, status: ['COMPLETED', 'CANCELLED'] });
     expect(todos).toStrictEqual([seed.services, seed.routes]);
-  })
-
-  test('getTodosByTags should return todos of a certain tag', async () => {
-    const todos = await todoRepository.getTodosByTags(1, ['prod', 'feature']);
+    todos = await todoRepository.getTodos({ id: 1, tag: ['prod', 'feature'] });
     expect(todos).toStrictEqual([seed.database, seed.orm]);
-  })
-
-  test('getTodosByStatusOrTags should return todos of a certain status and tag', async () => {
-    const todos = await todoRepository.getTodosByTagsOrStatus(2, ['CANCELLED'], ['scratch', 'staging']);
+    todos = await todoRepository.getTodos({ id: 2, status: ['CANCELLED'], tag: ['scratch', 'staging'] });
     expect(todos).toStrictEqual([seed.routes]);
   })
 

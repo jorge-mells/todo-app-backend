@@ -1,16 +1,10 @@
 import db from "./db.js";
 
-export async function getAllTodos(user_id) {
-  const todos = await db.todo.findMany({
-    where: {
-      user: {
-        id: user_id,
-      }
-    }
-  });
-  return todos;
-}
-
+/**
+ * Returns a todo for a user.
+ * @param {number} user_id - The id of the user.
+ * @param {number} todo_id - The id of the todo.
+ */
 export async function getTodo(user_id, todo_id) {
   const todo = await db.todo.findUnique({
     where: {
@@ -18,71 +12,77 @@ export async function getTodo(user_id, todo_id) {
       user: {
         id: user_id,
       }
-    }
+    },
+    include: {
+      tags: {
+        select: {
+          tag: true,
+        },
+      },
+    },
   });
   return todo;
 }
 
-export async function getTodosByTags(user_id, tags) {
+/**
+ * Returns todos based on user ID and optional filters.
+ * @param {object} options - The query options.
+ * @param {number} options.id - The user's ID.
+ * @param {Array<string>} [options.status] - An optional list of statuses to filter by.
+ * @param {Array<string>} [options.tag] - An optional list of tags to filter by.
+ */
+export async function getTodos({ id, status = [], tag = [] }) {
+  const whereClause = {
+    user: {
+      id,
+    },
+  };
+
+  if (status.length > 0) {
+    whereClause.status = {
+      in: status,
+    };
+  }
+
+  if (tag.length > 0) {
+    whereClause.tags = {
+      some: {
+        tag: {
+          name: {
+            in: tag,
+          },
+        },
+      },
+    };
+  }
+
   const todos = await db.todo.findMany({
-    where: {
+    where: whereClause,
+    include: {
       tags: {
-        some: {
-          tag: {
-            name: {
-              in: tags,
-            }
-          }
-        }
+        select: {
+          tag: true,
+        },
       },
-      user: {
-        id : user_id,
-      }
-    }
+    },
   });
+
   return todos;
 }
 
-export async function getTodosByStatus(user_id, statuses) {
-  const todos = await db.todo.findMany({
-    where: {
-      status: {
-        in: statuses,
-      },
-      user: {
-        id : user_id,
-      }
-    }
-  });
-  return todos;
-}
-
-export async function getTodosByTagsOrStatus(user_id, statuses, tags) {
-  const todos = await db.todo.findMany({
-    where: {
-      status: {
-        in: statuses,
-      },
-      tags: {
-        some: {
-          tag: {
-            name: {
-              in: tags,
-            }
-          }
-        }
-      },
-      user: {
-        id : user_id,
-      }
-    }
-  });
-  return todos;
-}
-
+/**
+ * Returns a newly created todo which has been stored in the database.
+ * @param {object} options - The query options.
+ * @param {number} options.userId - The user's ID.
+ * @param {string} options.title - The title of the todo.
+ * @param {string} options.content - The content of the todo.
+ * @param {'PENDING' | 'COMPLETED' | 'IN_PROGRESS' | 'CANCELLED'} [options.status] - The status for the todo.
+ * @param {Array<string>} [options.tags] - An optional list of tags to filter by.
+ */
 export async function createTodo({ userId, title, content, status, tags }) {
   return await db.$transaction(async (tx) => {
-    const upsertedTags = await Promise.all(tags.map(name => 
+    // Upsert tags
+    const upsertedTags = await Promise.all(tags.map(name =>
       tx.tag.upsert({
         where: { name },
         update: { name },
@@ -90,36 +90,43 @@ export async function createTodo({ userId, title, content, status, tags }) {
       })
     ));
 
-    const tagIds = upsertedTags.map(tag => ({
-      tag: {
-        connect: { id: tag.id }
-      }
-    }));
-
-    const newTodo = tx.todo.create({
+    // Create the todo itself
+    const newTodo = await tx.todo.create({
       data: {
-        user: {
-          connect: { id: userId },
-        },
+        user: { connect: { id: userId } },
         title,
         content,
         status,
-        tags: {
-          create: tagIds,
-        }
-      },
-      include: {
-        tags: {
-          select: {
-            tag: true,
-          },
-        },
       },
     });
-    return newTodo;
+
+    // Safely create join table entries
+    await Promise.all(upsertedTags.map(tag =>
+      tx.tagsOnTodos.create({
+        data: {
+          todoId: newTodo.id,
+          tagId: tag.id,
+        }
+      })
+    ));
+
+    // Return the todo including its tags
+    const todoWithTags = await tx.todo.findUnique({
+      where: { id: newTodo.id },
+      include: {
+        tags: { select: { tag: true } },
+      },
+    });
+
+    return todoWithTags;
   });
 }
 
+/**
+ * Deletes a todo and returns the deleted todo for a user.
+ * @param {number} user_id - The id of the user.
+ * @param {number} todo_id - The id of the todo.
+ */
 export async function deleteTodo(user_id, todo_id) {
   const deletedTodo = await db.todo.delete({
     where: {
@@ -139,8 +146,16 @@ export async function deleteTodo(user_id, todo_id) {
   return deletedTodo;
 }
 
-// NOTE: there's serious code duplication here. You can extract part of the transaction into a method
-// since both updateTodo and createTodo use the same thing
+/**
+ * Returns the updated todo which has been stored in the database.
+ * @param {number} userId - The user's ID.
+ * @param {number} todo_id - The todo's ID.
+ * @param {object} options - The query options.
+ * @param {string} options.title - The title of the todo.
+ * @param {string} options.content - The content of the todo.
+ * @param {'PENDING' | 'COMPLETED' | 'IN_PROGRESS' | 'CANCELLED'} [options.status] - The status for the todo.
+ * @param {Array<string>} [options.tags] - An optional list of tags to filter by.
+ */
 export async function updateTodo(userId, todo_id, { title, content, status, tags }) {
   return await db.$transaction(async (tx) => {
     const upsertedTags = await Promise.all(tags.map(name => 
@@ -151,32 +166,19 @@ export async function updateTodo(userId, todo_id, { title, content, status, tags
       })
     ));
 
-    const tagIds = upsertedTags.map(tag => ({
-      tag: {
-        connect: { id: tag.id },
-      }
-    }));
+    await Promise.all(upsertedTags.map(tag =>
+      tx.tagsOnTodos.upsert({
+        where: { todoId_tagId: { todoId: todo_id, tagId: tag.id }},
+        update: {},
+        create: { todoId: todo_id, tagId: tag.id }
+      })
+    ));
 
     const updatedTodo = await tx.todo.update({
-      where: {
-        userId: userId,
-        id: todo_id,
-      },
-      data: {
-        title,
-        content,
-        status,
-        tags: {
-          create: tagIds,
-        }
-      },
-      include: {
-        tags: {
-          select: {
-            tag: true,
-          },
-        },
-      },
+      where: { id: todo_id, userId },
+      data: { title, content, status },
+      include: { tags: { select: { tag: true } } },
+      rejectOnNotFound: true,
     });
     return updatedTodo;
   });

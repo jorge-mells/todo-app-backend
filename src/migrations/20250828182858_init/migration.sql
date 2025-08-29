@@ -21,7 +21,7 @@ CREATE TABLE `todos` (
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
     `title` VARCHAR(255) NOT NULL,
-    `content` VARCHAR(191) NOT NULL,
+    `content` TEXT NOT NULL,
     `status` ENUM('PENDING', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED') NOT NULL DEFAULT 'PENDING',
     `userId` INTEGER NOT NULL,
 
@@ -33,7 +33,7 @@ CREATE TABLE `users` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `username` VARCHAR(191) NOT NULL,
     `password` VARCHAR(191) NOT NULL,
-    `refreshToken` VARCHAR(191) NOT NULL,
+    `refreshToken` VARCHAR(500) NOT NULL,
     `isRevoked` BOOLEAN NOT NULL DEFAULT false,
 
     UNIQUE INDEX `users_username_key`(`username`),

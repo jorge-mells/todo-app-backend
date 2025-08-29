@@ -1,3 +1,7 @@
+/**
+ * Seeds the database with initial data.
+ * @param {import('@prisma/client').PrismaClient} db - The PrismaClient instance.
+ */
 const genericSeedData = async (db, log) => {
     log.test = await db.tag.create({
     data: { name: 'test' },
@@ -19,6 +23,14 @@ const genericSeedData = async (db, log) => {
     data: { name: 'scratch' },
   })
 
+  const includeQuery = {
+    tags: {
+      select: {
+        tag: true,
+      },
+    },
+  };
+
   log.database = await db.todo.create({
     data: {
       user: { connect: { username: 'alice' } },
@@ -27,21 +39,18 @@ const genericSeedData = async (db, log) => {
         create: [
           {
             tag: {
-              connect: {
-                name: "test"
-              }
+              connect: { name: "test" }
             }
           },
           {
             tag: {
-              connect: {
-                name: "prod"
-              }
+              connect: { name: "prod" }
             }
           }
         ]
       }
-    }
+    },
+    include: includeQuery,
   })
 
   log.orm = await db.todo.create({
@@ -52,21 +61,18 @@ const genericSeedData = async (db, log) => {
         create: [
           {
             tag: {
-              connect: {
-                name: "staging"
-              }
+              connect: { name: "staging" }
             }
           },
           {
             tag: {
-              connect: {
-                name: "prod"
-              }
+              connect: { name: "prod" }
             }
           }
         ]
       }
-    }
+    },
+    include: includeQuery,
   })
 
   log.services = await db.todo.create({
@@ -77,21 +83,18 @@ const genericSeedData = async (db, log) => {
         create: [
           {
             tag: {
-              connect: {
-                name: "staging"
-              }
+              connect: { name: "staging" }
             }
           },
           {
             tag: {
-              connect: {
-                name: "feature"
-              }
+              connect: { name: "feature" }
             }
           }
         ]
       }
-    }
+    },
+    include: includeQuery,
   })
 
   log.routes = await db.todo.create({
@@ -102,21 +105,18 @@ const genericSeedData = async (db, log) => {
         create: [
           {
             tag: {
-              connect: {
-                name: "scratch"
-              }
+              connect: { name: "scratch" }
             }
           },
           {
             tag: {
-              connect: {
-                name: "feature"
-              }
+              connect: { name: "feature" }
             }
           }
         ]
       }
-    }
+    },
+    include: includeQuery,
   })
   return log;
 }

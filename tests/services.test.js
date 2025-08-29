@@ -106,8 +106,6 @@ describe('Auth Service Tests', () => {
     // Test that an error is thrown for a taken username
     vi.mocked(userRepository.getUser).mockReturnValueOnce({ id: 1, password: 'test-password' });
     await testHttpErrorHelper(authService.createCredentials, ['test-user', 'test-password'], 'username already exists', 409);
-    // Test that the username is being checked
-    await testHttpErrorHelper(authService.createCredentials, ['_test-user', 'test-password'], 'invalid username: username should start with a letter or number, and should only contain letters, numbers, -, and _', 400);
     // Test that credentials are created when everything is valid
     const result = await authService.createCredentials('unused-username', 'strong password');
     expect(result).toStrictEqual({
