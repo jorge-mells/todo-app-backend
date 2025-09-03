@@ -1,0 +1,30 @@
+# Node modules (we’ll install fresh ones in the container)
+node_modules
+npm-debug.log
+yarn-error.log
+
+# Build outputs
+dist
+build
+
+# Environment files
+.env
+.env.*
+
+# Logs
+*.log
+logs
+
+# OS or IDE files
+.DS_Store
+.idea
+.vscode
+
+# Git metadata
+.git
+.gitignore
+
+# Docker files that shouldn’t be copied
+Dockerfile
+docker-compose.yml
+

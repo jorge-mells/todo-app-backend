@@ -1,3 +1,5 @@
+// NOTE: if the code in any of the controllers gets too complex, extract some of it to todos-service and use the requestHandler to simplify
+// code here
 import validator from 'validator';
 import { createTodo, deleteTodo, getTodo, getTodos, updateTodo } from "../data/todo-repository.js";
 import logger from "../utils/logger.js";
@@ -10,7 +12,7 @@ import { validate, filterParamsSchema, todoSchema } from '../utils/validators.js
 
 /**
  * Validate and authenticate the user.
- * @param {Request} req - Express request object.
+ * @param {Request & { user: { id: number } }} req - Express request object.
  * @param {Response} res - Express response object.
  */
 export const singleTodoQuery = async (req, res) => {
@@ -18,11 +20,10 @@ export const singleTodoQuery = async (req, res) => {
     ip: validator.escape(req.ip || 'Unknown'),
     userAgent: validator.escape(req.get('user-agent') || 'Unknown'),
   }
+  let todo_id;
   try {
-    // NOTE: if the code here gets too complex, extract some of it to todos-service and use the requestHandler to simplify
-    // code here
     const { id: user_id } = req.user;
-    const todo_id = parseInt(req.params.id, 10);
+    todo_id = parseInt(req.params.id, 10);
     const todo = await getTodo(user_id, todo_id);
     reqAttempt.id = user_id;
     logger.info(`todo get query: successful`);
@@ -31,13 +32,13 @@ export const singleTodoQuery = async (req, res) => {
       message: `todo get query: successful`,
     })
   } catch (err) {
-    return errorHandler(req, res, err, `todo ${todo_id} query`);
+    return errorHandler(req, res, err, `todo ${todo_id || 'null'} query`);
   }
 };
 
 /**
  * Validate and authenticate the user.
- * @param {Request} req - Express request object.
+ * @param {Request & { user: { id: number } }} req - Express request object.
  * @param {Response} res - Express response object.
  */
 export const filterTodosQuery = async (req, res) => {
@@ -47,8 +48,8 @@ export const filterTodosQuery = async (req, res) => {
   }
   try {
     const { id } = req.user;
-    let { status, tag } = validate(filterParamsSchema, req.query); 
-    const todos = await getTodos({id, status, tag});
+    let params = validate(filterParamsSchema, req.query); 
+    const todos = await getTodos({id, ...params});
     reqAttempt.id = id;
     logger.info('todos get query: successful', reqAttempt);
     return res.status(200).json({
@@ -62,7 +63,7 @@ export const filterTodosQuery = async (req, res) => {
 
 /**
  * Validate and authenticate the user.
- * @param {Request} req - Express request object.
+ * @param {Request & { user: { id: number } }} req - Express request object.
  * @param {Response} res - Express response object.
  */
 export const createTodoQuery = async (req, res) => {
@@ -86,7 +87,7 @@ export const createTodoQuery = async (req, res) => {
 
 /**
  * Validate and authenticate the user.
- * @param {Request} req - Express request object.
+ * @param {Request & { user: { id: number } }} req - Express request object.
  * @param {Response} res - Express response object.
  */
 export const deleteTodoQuery = async (req, res) => {
@@ -94,11 +95,12 @@ export const deleteTodoQuery = async (req, res) => {
     ip: validator.escape(req.ip || 'Unknown'),
     userAgent: validator.escape(req.get('user-agent') || 'Unknown'),
   }
+  let todo_id;
   try {
     // NOTE: if the code here gets too complex, extract some of it to todos-service and use the requestHandler to simplify
     // code here
     let { id: user_id } = req.user;
-    const todo_id = parseInt(req.params.id, 10);
+    let todo_id = parseInt(req.params.id, 10);
     await deleteTodo(user_id, todo_id);
     reqAttempt.id = user_id;
     logger.info(`todo query deletion: successful`);
@@ -111,13 +113,13 @@ export const deleteTodoQuery = async (req, res) => {
 	message: 'todo query deletion: successful',
       })
     }
-    return errorHandler(req, res, err, `todo ${todo_id} query deletion`);
+    return errorHandler(req, res, err, `todo ${todo_id || 'null'} query deletion`);
   }
 };
 
 /**
  * Validate and authenticate the user.
- * @param {Request} req - Express request object.
+ * @param {Request & { user: { id: number } }} req - Express request object.
  * @param {Response} res - Express response object.
  */
 export const updateTodoQuery = async (req, res) => {

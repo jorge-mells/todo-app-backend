@@ -52,15 +52,15 @@ export const todoSchema = Joi.object({
   title: Joi.string().required().min(1).max(255).trim(),
   content: Joi.string().required().min(1).max(500).trim(),
   status: statusSchema.default('PENDING'),
-  tags : Joi.array().items(tagSchema).default([])
+  tags : Joi.array().items(tagSchema).default([]),
+  dueDate: Joi.date().min('now').optional()
 })
 
 /**
  * Convert a value to an array
  * @param {string | undefined | Array<string>} value - The string to validate.
- * @param {CustomHelpers} _helpers - Joi helpers object.
  */
-const toArray = (value, _helpers) => {
+const toArray = (value) => {
   if (value === undefined) {
     return [];
   }
@@ -70,6 +70,12 @@ const toArray = (value, _helpers) => {
   return value;
 };
 export const filterParamsSchema = Joi.object({
+  title: Joi.string().min(1).max(255).trim().optional(),
+  content: Joi.string().optional().min(1).max(500).trim(),
+  range: Joi.object({
+    before: Joi.date().optional(),
+    after: Joi.date().optional(),
+  }).optional(),
   status: Joi.alternatives()
   .try(
     Joi.array().items(
@@ -111,8 +117,8 @@ export const validate = (schema, input) => {
   };
   const result = schema.validate(input, options);
   // custom transformation, because I can't figure out joi
-  if (result.value.status) result.value.status = makeUnique(result.value.status);
-  if (result.value.tags) result.value.tags = makeUnique(result.value.tags);
+  if (result?.value?.status) result.value.status = makeUnique(result.value.status);
+  if (result?.value?.tags) result.value.tags = makeUnique(result.value.tags);
   if (result.error) {
     throw new HttpError(result.error.message, 400);
   }

@@ -1,4 +1,4 @@
-import { beforeEach, expect, test, describe } from 'vitest';
+import { beforeAll, beforeEach, expect, test, describe } from 'vitest';
 import * as userRepository from '../src/data/user-repository.js';
 import * as todoRepository from '../src/data/todo-repository.js';
 import db from "../src/data/db.js";
@@ -42,7 +42,7 @@ describe('User Repository Tests', () => {
       password: 'new password',
       refreshToken: 'refresh',
     }
-    const user = await userRepository.updateUser('test', 'new password', 'refresh');
+    const user = await userRepository.updateUser('test', 'new password', 'refresh', undefined);
     expect(user).toStrictEqual({ ...expectedUser });
   })
 
@@ -76,6 +76,14 @@ describe('Todo Repository Tests', () => {
     expect(todos).toStrictEqual([seed.database, seed.orm]);
     todos = await todoRepository.getTodos({ id: 2, status: ['CANCELLED'], tag: ['scratch', 'staging'] });
     expect(todos).toStrictEqual([seed.routes]);
+    todos = await todoRepository.getTodos({ id: 1, title: "*d*" });
+    expect(todos).toStrictEqual([seed.database]);
+    todos = await todoRepository.getTodos({ id: 1, content: "*orm*" });
+    expect(todos).toStrictEqual([seed.orm]);
+    todos = await todoRepository.getTodos({ id: 1, content: "*d*", range: { before: "10-10-2025"}});
+    expect(todos).toStrictEqual([seed.database]);
+    todos = await todoRepository.getTodos({ id: 1, range: { after: "10-10-2025"}});
+    expect(todos).toStrictEqual([]);
   })
 
   test('updateTodo should return the updated todo', async () => {

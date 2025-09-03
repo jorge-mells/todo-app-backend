@@ -3,7 +3,7 @@
  * @param {import('@prisma/client').PrismaClient} db - The PrismaClient instance.
  */
 const genericSeedData = async (db, log) => {
-    log.test = await db.tag.create({
+  log.test = await db.tag.create({
     data: { name: 'test' },
   })
 
@@ -35,6 +35,7 @@ const genericSeedData = async (db, log) => {
     data: {
       user: { connect: { username: 'alice' } },
       title: 'database', content: 'create the database', status: 'IN_PROGRESS',
+      dueDate: new Date('09-09-2025'),
       tags: {
         create: [
           {

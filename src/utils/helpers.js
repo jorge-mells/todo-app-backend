@@ -11,6 +11,7 @@ import logger from "./logger.js";
  * @param {Response} res - Express response object.
  * @param {object & { id: number, message: string }} result - The result of calls to service methods.
  * @param {number} statusCode - The accurate status code to be returned to the user.
+ * @param {string} messagePrefix - A prefix string to put before every message.
  */
 export function requestHandler(req, res, result, statusCode, messagePrefix) {
   const requestAttempt = {

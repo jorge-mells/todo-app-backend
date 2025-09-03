@@ -24,20 +24,60 @@ export async function getTodo(user_id, todo_id) {
   return todo;
 }
 
+function textFilter(text) {
+  return {
+    search: text,
+  }
+}
+
+function dateFilter(before, after) {
+  if (before && after) {
+    return {
+      lte: new Date(before),
+      gte: new Date(after),
+    }
+  } else if (before) {
+    return {
+      lte: new Date(before),
+    }
+  } else if (after) {
+    return {
+      gte: new Date(after)
+    }
+  } else {
+    return null;
+  }
+}
+
 /**
  * Returns todos based on user ID and optional filters.
  * @param {object} options - The query options.
  * @param {number} options.id - The user's ID.
  * @param {Array<string>} [options.status] - An optional list of statuses to filter by.
  * @param {Array<string>} [options.tag] - An optional list of tags to filter by.
+ * @param {string} [options.title] - A possible title for todos.
+ * @param {string} [options.content] - A possible content for todos.
+ * @param {object} [options.range] - Date filters for todos(make this null to filter out todos without due dates).
+ * @param {Date | string} [options.range.before] - Filter for todos before this date.
+ * @param {Date | string} [options.range.after] - Filter for todos after this date.
  */
-export async function getTodos({ id, status = [], tag = [] }) {
+
+export async function getTodos({ id, title, content, range, status = [], tag = [] }) {
   const whereClause = {
     user: {
       id,
     },
   };
 
+  if (range || range === null) {
+    whereClause.dueDate = dateFilter(range?.before, range?.after);
+  }
+  if (content) {
+    whereClause.content = textFilter(content);
+  }
+  if (title) {
+    whereClause.title = textFilter(title);
+  }
   if (status.length > 0) {
     whereClause.status = {
       in: status,
@@ -47,11 +87,7 @@ export async function getTodos({ id, status = [], tag = [] }) {
   if (tag.length > 0) {
     whereClause.tags = {
       some: {
-        tag: {
-          name: {
-            in: tag,
-          },
-        },
+        tag: { name: { in: tag, }, },
       },
     };
   }
@@ -59,11 +95,7 @@ export async function getTodos({ id, status = [], tag = [] }) {
   const todos = await db.todo.findMany({
     where: whereClause,
     include: {
-      tags: {
-        select: {
-          tag: true,
-        },
-      },
+      tags: { select: { tag: true, }, },
     },
   });
 
@@ -78,8 +110,9 @@ export async function getTodos({ id, status = [], tag = [] }) {
  * @param {string} options.content - The content of the todo.
  * @param {'PENDING' | 'COMPLETED' | 'IN_PROGRESS' | 'CANCELLED'} [options.status] - The status for the todo.
  * @param {Array<string>} [options.tags] - An optional list of tags to filter by.
+ * @param {Date | string} [options.dueDate] - The due date for the todo.
  */
-export async function createTodo({ userId, title, content, status, tags }) {
+export async function createTodo({ userId, title, content, status, tags, dueDate }) {
   return await db.$transaction(async (tx) => {
     // Upsert tags
     const upsertedTags = await Promise.all(tags.map(name =>
@@ -97,6 +130,7 @@ export async function createTodo({ userId, title, content, status, tags }) {
         title,
         content,
         status,
+        dueDate,
       },
     });
 
@@ -155,8 +189,9 @@ export async function deleteTodo(user_id, todo_id) {
  * @param {string} options.content - The content of the todo.
  * @param {'PENDING' | 'COMPLETED' | 'IN_PROGRESS' | 'CANCELLED'} [options.status] - The status for the todo.
  * @param {Array<string>} [options.tags] - An optional list of tags to filter by.
+ * @param {Date | string} [options.dueDate] - The due date for the todo.
  */
-export async function updateTodo(userId, todo_id, { title, content, status, tags }) {
+export async function updateTodo(userId, todo_id, { title, content, status, tags, dueDate }) {
   return await db.$transaction(async (tx) => {
     const upsertedTags = await Promise.all(tags.map(name => 
       tx.tag.upsert({
@@ -176,9 +211,8 @@ export async function updateTodo(userId, todo_id, { title, content, status, tags
 
     const updatedTodo = await tx.todo.update({
       where: { id: todo_id, userId },
-      data: { title, content, status },
+      data: { title, content, status, dueDate },
       include: { tags: { select: { tag: true } } },
-      rejectOnNotFound: true,
     });
     return updatedTodo;
   });

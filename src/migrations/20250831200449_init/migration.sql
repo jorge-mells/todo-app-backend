@@ -20,11 +20,15 @@ CREATE TABLE `todos` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
+    `dueDate` DATETIME(3) NULL,
     `title` VARCHAR(255) NOT NULL,
     `content` TEXT NOT NULL,
     `status` ENUM('PENDING', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED') NOT NULL DEFAULT 'PENDING',
     `userId` INTEGER NOT NULL,
 
+    FULLTEXT INDEX `todos_title_idx`(`title`),
+    FULLTEXT INDEX `todos_content_idx`(`content`),
+    FULLTEXT INDEX `todos_title_content_idx`(`title`, `content`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 

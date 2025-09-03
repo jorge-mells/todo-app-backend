@@ -1,0 +1,66 @@
+services:
+  backend_base: &backend_base
+    build:
+      args:
+      - NODE_ENV=development
+      target: development
+    environment:
+      - DATABASE_URL=mysql://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
+      - REDIS_URL=redis://${REDIS_HOST}:${REDIS_PORT}
+      - JWT_SECRET=${JWT_SECRET}
+      - NODE_ENV=development
+    networks:
+      - private
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+  db:
+    image: mariadb:10.6.4-focal
+    command: '--default-authentication-plugin=mysql_native_password'
+    restart: always
+    volumes:
+      - db-data:/var/lib/mysql
+      - ./scripts/db-init:/docker-entrypoint-initdb.d:ro
+    networks:
+      - private
+    environment:
+      - MARIADB_ROOT_PASSWORD=${DB_ROOT_PASSWORD}
+      - MARIADB_DATABASE=${DB_NAME}
+      - MARIADB_USER=${DB_USER}
+      - MARIADB_PASSWORD=${DB_PASSWORD}
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "${DB_USER}", "-p${DB_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  redis:
+    image: redis:8
+    networks:
+      - private
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  backend:
+    <<: *backend_base
+    command: npm run dev
+    ports:
+      - 8000:8000
+      - 9229:9229
+      - 9230:9230
+    volumes:
+      - ./src:/code/src:ro
+      - ./package.json:/code/package.json
+      - ./package-lock.json:/code/package-lock.json
+      - back-notused:/code/node_modules
+  test:
+    <<: *backend_base
+    command: npm run test:ci
+networks:
+  private:
+volumes:
+  back-notused:
+  db-data:
