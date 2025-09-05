@@ -9,6 +9,7 @@ env:
 jobs:
   release:
     runs-on: ubuntu-latest
+    environment: container-deployment
     permissions:
       contents: write
       packages: write
