@@ -1,4 +1,5 @@
 import logger from "./logger.js";
+import qs from 'qs';
 
 /**
  * @import { Request, Response } from 'express'
@@ -23,6 +24,15 @@ export function requestHandler(req, res, result, statusCode, messagePrefix) {
   return res.status(statusCode).json(result);
 }
 
+/**
+ * Correctly configure express to parse queries
+ * @param {string} str - The string to parse
+ */
+export const parserHelper = (str) => qs.parse(str, {
+  allowDots: true,
+  arrayLimit: 100,
+  depth: 5
+})
 
 /**
  * Reset the db only for testing.

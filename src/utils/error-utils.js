@@ -51,6 +51,7 @@ export function errorHandler(req, res, err, errorPrefix) {
   logger.error(`${errorPrefix}: ${message.log}`, connectionAttempt);
   return res.status(statusCode(err)).json({
     error: message.client,
+    docs: "You can check the api documentation at /api/v1/api-docs"
   })
 }
 

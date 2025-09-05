@@ -5,10 +5,10 @@ on:
   pull_request:
     branches: [ "main" ]
 env:
-  DB_USER: test # ${{ vars.DB_USER }} use this if stuff start to change a lot and add it to repository variables(not environment)
   DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
   DB_ROOT_PASSWORD: ${{ secrets.DB_ROOT_PASSWORD }}
   JWT_SECRET: ${{ secrets.JWT_SECRET }}
+  DB_USER: test # ${{ vars.DB_USER }} use this if stuff start to change a lot and add it to repository variables(not environment)
   DB_HOST: db
   DB_PORT: 3306
   DB_NAME: test

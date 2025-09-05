@@ -35,5 +35,8 @@ export const handleAllOtherErrors = (err, _req, res) => {
       message: 'resource does not exist',
     })
   }
-  return res.status(500).send({ message: 'internal server error: please contact the developers' });
+  return res.status(500).send({ 
+    message: 'internal server error: please contact the developers',
+    docs: "You can check the api documentation at /api/v1/api-docs"
+ });
 };

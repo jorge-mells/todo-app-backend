@@ -24,7 +24,7 @@ const passwordStrengthValidator = (value, helpers) => {
   return value;
 };
 export const authSchema = Joi.object({
-  username: Joi.string().min(3).max(30).pattern(/^[a-zA-Z0-9][a-zA-Z0-9_-]{1,18}[a-zA-Z0-9]$/).required().messages({
+  username: Joi.string().min(3).max(20).pattern(/^[a-zA-Z0-9][a-zA-Z0-9_-]{1,18}[a-zA-Z0-9]$/).required().messages({
     'string.pattern.base': 'Username must start and end with a letter or number, and can only contain letters, numbers, hyphens, or underscores.'
   }),
   password: Joi.string().required().custom(passwordStrengthValidator).messages({

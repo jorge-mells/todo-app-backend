@@ -1,0 +1,414 @@
+openapi: 3.0.0
+info:
+  title: TODO API
+  version: 1.0.0
+  description: A simple TODO API for managing tasks
+  contact:
+    name: API Support
+    email: admin@<domain-name>.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:8000
+    description: Development server
+  - url: https://your-production-domain.com
+    description: Production server
+
+paths:
+  /api/v1/register:
+    post:
+      summary: Register a new account
+      description: Create a new account to manage todos. Returns a token and refresh token
+      tags:
+        - Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Auth'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /api/v1/login:
+    post:
+      summary: Log into an account
+      description: Log into an account to view todos. Returns a token and refresh token
+      tags:
+        - Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Auth'
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /api/v1/refresh:
+    post:
+      summary: Refresh an expired access token
+      description: Returns a new token and refresh token. Pass the refresh token as a bearer authentication header.
+      security: 
+        - BearerAuth: []
+      tags:
+        - Auth
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /api/v1/logout:
+    post:
+      summary: Logout of the current session
+      description: Revokes the assigned tokens.
+      security: 
+        - BearerAuth: []
+      tags:
+        - Auth
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /api/v1/todos:
+    get:
+      summary: Get all todos
+      description: Retrieve a list of all todo items. Add queries for custom filtering
+      security: 
+        - BearerAuth: []
+      tags:
+        - Todos
+      parameters:
+        - name: status
+          in: query
+          required: false
+          description: Filter todos by status
+          schema:
+            type: string
+            enum: [PENDING, IN_PROGRESS, COMPLETED, CANCELLED]
+        - name: tag
+          in: query
+          required: false
+          description: Filter todos by tags
+          schema:
+            type: array
+            items:
+              type: string
+            style: form
+            explode: true
+        - name: title
+          in: query
+          required: false
+          description: Filter todos by title. Pass a search pattern using MySQL REGEXP syntax.
+          example: '^foo.*bar$'
+          schema:
+            type: string
+        - name: content
+          in: query
+          required: false
+          description: Filter todos by content. Pass a search pattern using MySQL REGEXP syntax.
+          example: '^foo.*bar$'
+          schema:
+            type: string
+        - name: range.before
+          in: query
+          required: false
+          description: Find all todos before or on this date
+          example: 2025-09-03
+          schema:
+            type: string
+            format: date
+        - name: range.after
+          in: query
+          required: false
+          description: Find all todos on or after this date
+          example: 2024-09-03
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  todos:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Todo'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+    post:
+      summary: Create a new todo
+      description: Create and store a new todo.
+      security: 
+        - BearerAuth: []
+      tags:
+        - Todos
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Todo'
+      responses:
+        '200':
+          description: Todo created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Todo'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /api/v1/todos/{id}:
+    get:
+      summary: Get a single todo by ID
+      description: Retrieve a single todo by its unique identifier. If the todo is not found, an error response is returned.
+      security: 
+        - BearerAuth: []
+      tags:
+        - Todos
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Unique identifier of the todo
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: Todo found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Todo'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+    patch:
+      summary: Update a specific todo
+      description: Update a todo.
+      security: 
+        - BearerAuth: []
+      tags:
+        - Todos
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Unique identifier of the todo
+          schema:
+            type: integer
+            example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Todo'
+      responses:
+        '200':
+          description: Todo updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Todo'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+    delete:
+      summary: Delete a todo
+      description: Delete a particular todo.
+      security: 
+        - BearerAuth: []
+      tags:
+        - Todos
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Unique identifier of the todo
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: Todo deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Todo'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+components:
+  schemas:
+    Auth:
+      type: object
+      required:
+        - username
+        - password
+      properties:
+        username:
+          type: string
+          pattern: '^[a-zA-Z0-9][a-zA-Z0-9_-]{1,18}[a-zA-Z0-9]$'
+          description: Must start and end with a letter or number, and can only contain letters, numbers, hyphens, or underscores.
+        password:
+          type: string
+
+    AuthResponse:
+      type: object
+      required:
+        - id
+        - message
+      properties:
+        id:
+          type: integer
+          description: User ID
+          example: 1
+        token:
+          type: string
+          minLength: 32
+          maxLength: 500
+          example: <jwt-token>
+        refreshToken:
+          type: string
+          minLength: 32
+          maxLength: 500
+          example: <refresh-token>
+        message:
+          type: string
+          example: successful registration
+
+    Todo:
+      type: object
+      required:
+        - title
+        - content
+      properties:
+        message:
+          type: string
+          description: Informational message about the operation
+          example: "todo creation: successful"
+        id:
+          type: integer
+          description: Unique todo identifier
+          example: 1
+        title:
+          type: string
+          description: Title of the todo
+          minLength: 1
+          maxLength: 255
+          example: "Buy groceries"
+        content:
+          type: string
+          description: Detailed description of the todo
+          minLength: 1
+          maxLength: 500
+          example: "Buy tomatoes, onions, pepper, carrots and cucumbers."
+        status:
+          type: string
+          description: Current status of the todo
+          enum: [PENDING, IN_PROGRESS, COMPLETED, CANCELLED]
+          example: PENDING
+        dueDate:
+          type: string
+          format: date
+          description: Due date of the todo
+          example: 2025-09-03
+        createdAt:
+          type: string
+          format: date
+          description: Creation date of the todo
+          example: 2025-09-03
+        updatedAt:
+          type: string
+          format: date
+          description: Last update date of the todo
+          example: 2025-09-03
+        userId:
+          type: integer
+          description: ID of the user who owns the todo
+          example: 1
+        tags:
+          type: array
+          description: Tags associated with the todo
+          items:
+            type: object
+            required:
+              - id
+              - name
+            properties:
+              id:
+                type: integer
+                description: Unique tag identifier
+                example: 2
+              name:
+                type: string
+                description: Name of the tag
+                example: work
+
+    Error:
+      type: object
+      required:
+        - error
+        - docs
+      properties:
+        error:
+          type: string
+          example: username already exists
+        docs:
+          type: string
+          enum: ["You can check the API documentation at /api/v1/api-docs"]
+
+  responses:
+    ErrorResponse:
+      description: Other errors
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

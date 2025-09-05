@@ -29,6 +29,7 @@
   },
   "homepage": "https://github.com/jorge-mells/todo-app-backend#readme",
   "dependencies": {
+    "@prisma/client": "^6.15.0",
     "bcrypt": "^6.0.0",
     "dotenv": "^17.2.1",
     "dotenv-expand": "^12.0.3",
@@ -40,10 +41,11 @@
     "prom-client": "^15.1.3",
     "qs": "^6.14.0",
     "redis": "^5.8.2",
+    "swagger-ui-express": "^5.0.1",
     "validator": "^13.15.15",
     "winston": "^3.17.0",
-    "zxcvbn": "^4.4.2",
-    "@prisma/client": "^6.15.0"
+    "yamljs": "^0.3.0",
+    "zxcvbn": "^4.4.2"
   },
   "devDependencies": {
     "@eslint/js": "^9.34.0",

@@ -52,6 +52,7 @@ services:
       - 9229:9229
       - 9230:9230
     volumes:
+      - ./docs:/code/docs:ro
       - ./src:/code/src:ro
       - ./package.json:/code/package.json
       - ./package-lock.json:/code/package-lock.json
