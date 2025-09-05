@@ -99,7 +99,7 @@ Checks if the best practices and the right coding style has been used.
 You can deploy the app as a docker container using the following. Otherwise use any other deployment method you are
 familiar with or checkout todo-app-devops for a kubernetes deployment to private cloud.
 
-    docker pull ghcr.io/jorge-mells/todo-app-backend:v1.0.0
+    docker pull ghcr.io/jorge-mells/todo-app-backend:latest
 
 ## Built With
 
@@ -134,6 +134,11 @@ details
 ## Acknowledgments
 
   - chatgpt, claude, gemini, copilot, meta, deepseek, grok. I used them all :).
+
+## Comments
+  - there are several bugs in this, and several inefficiencies. If you are interested, you can take a look.
+  - There are several dependencies I used that I shouldn't have, but it's all for learning sake, otherwise any
+    other comments are welcome.
 
 
 [javascript-badge]: https://img.shields.io/badge/JavaScript-ES2022-yellow?logo=javascript&style=flat-square
