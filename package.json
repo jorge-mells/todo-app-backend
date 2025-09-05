@@ -28,6 +28,10 @@
     "url": "https://github.com/jorge-mells/todo-app-backend/issues"
   },
   "homepage": "https://github.com/jorge-mells/todo-app-backend#readme",
+  "engines": {
+    "node": ">=22",
+    "npm": ">=9"
+  },
   "dependencies": {
     "@prisma/client": "^6.15.0",
     "bcrypt": "^6.0.0",
