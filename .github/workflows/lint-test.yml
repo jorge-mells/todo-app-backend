@@ -32,7 +32,6 @@ jobs:
     - run: npm run lint --if-present
   test:
     runs-on: ubuntu-latest
-    environment: test-and-lint
     steps:
     - uses: actions/checkout@v4
     - name: Build Docker Containers
