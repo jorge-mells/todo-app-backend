@@ -48,4 +48,4 @@ jobs:
         release_name: Release ${{ github.ref_name }}
         body: |
           ✨ **New Release** - Please pull this docker image to deploy.
-          📦 **Container:** `${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }}
+          📦 **Container:** `${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }}`
