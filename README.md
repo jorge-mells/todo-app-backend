@@ -47,6 +47,11 @@ Clone the project
     git clone <repo_url>
     cd todo-app-backend
 
+Copy .env.example to .env and modify the values accordingly. Use the user and password you created for the db from above
+or your own custom values if you are using docker.
+
+    cp .env.example .env
+
 #### Docker Setup
 
 If you are using docker just run the following. Otherwise continue with the next steps.
@@ -59,11 +64,6 @@ If you are using docker just run the following. Otherwise continue with the next
 Install dependencies
 
     npm install
-
-Copy .env.example to .env and modify the values accordingly. Use the user and password you created for the db from above
-or your own custom values if you are using docker.
-
-    cp .env.example .env
 
 You may need to generate a new prisma client and ensure client is in sync
 
