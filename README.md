@@ -29,6 +29,8 @@ Requirements for the software and other tools to build, test and push
 - [Docker(optional)](https://docs.docker.com/engine/install/)
 - [mysql(optional)](https://documentation.ubuntu.com/server/how-to/databases/install-mysql/). Follow the link to install
   on ubuntu
+- [redis(optional)](https://redis.io/docs/latest/operate/oss_and_stack/install/archive/install-redis/install-redis-on-linux/).
+  Follow the link to install on ubuntu
 
 ### Installing
 
@@ -41,6 +43,8 @@ FLUSH PRIVILEGES;
 ```
 > ⚠ Note: Granting privileges on `*.*` is only for local development, but I do it everywhere because it is more
 > convenient.
+
+> ⚠ Note: Ensure that the redis server is running
 
 Clone the project
 
@@ -136,7 +140,7 @@ details
   - chatgpt, claude, gemini, copilot, meta, deepseek, grok. I used them all :).
 
 ## Comments
-  - there are several bugs in this, and several inefficiencies. If you are interested, you can take a look.
+  - there are several bugs in this, and several inefficiencies and security risks. If you are interested, you can take a look.
   - There are several dependencies I used that I shouldn't have, but it's all for learning sake, otherwise any
     other comments are welcome.
 

@@ -1,4 +1,5 @@
 import express from "express";
+import cors from "cors";
 import todosRouter from "./routes/todos-routes.js"
 import authRouter from "./routes/auth-routes.js"
 import metricsRouter from "./routes/metrics-routes.js"
@@ -12,6 +13,7 @@ const app = express();
 const apiStr = `/api/v1`;
 
 // settings
+app.use(cors());
 app.use(express.json());
 // Configure express to use qs parser
 app.set('query parser', parserHelper);

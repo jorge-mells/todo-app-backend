@@ -56,12 +56,10 @@ services:
       - ./src:/code/src:ro
       - ./package.json:/code/package.json
       - ./package-lock.json:/code/package-lock.json
-      - back-notused:/code/node_modules
   test:
     <<: *backend_base
     command: npm run test:ci
 networks:
   private:
 volumes:
-  back-notused:
   db-data:
