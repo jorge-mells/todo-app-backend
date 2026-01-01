@@ -2,8 +2,10 @@ name: Lint And Test
 on:
   push:
     branches: [ "main" ]
+    tags: [ 'v*.*.*' ]
   pull_request:
     branches: [ "main" ]
+    tags: [ 'v*.*.*' ]
 env:
   DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
   DB_ROOT_PASSWORD: ${{ secrets.DB_ROOT_PASSWORD }}
@@ -41,3 +43,16 @@ jobs:
     - name: Cleanup
       if: always()
       run: docker compose down -v
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Code Scan (Semgrep)
+        uses: returntocorp/semgrep-action@v1
+      - name: Dependency Scan (npm)
+        run: npm audit --audit-level=high
+  call-release: # only calls release pipelines on tagged commits
+    needs: [ lint, test, security ]
+    if: startsWith(github.ref, 'refs/tags/v')
+    uses: ./.github/workflows/release.yml
+    secrets: inherit
