@@ -50,3 +50,11 @@ jobs:
         body: |
           ✨ **New Release** - Please pull this docker image to deploy.
           📦 **Container:** `${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }}`
+    - name: Trigger Deploy Workflow
+      if: success()
+      uses: peter-evans/repository-dispatch@v3
+      with: 
+        token: ${{ secrets.GITOPS_TOKEN }}
+        repository: jorge-mells/todo-app-devops
+        event-type: app-release-success
+        client-payload: '{"image_tag": "${{ steps.vars.outputs.sha_short }}"}'
