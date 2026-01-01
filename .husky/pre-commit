@@ -1,0 +1,17 @@
+#!/usr/bin/env sh
+
+echo "🛡️ Starting Pre-Commit Quality Gate..."
+
+# 1. Linting
+echo "🔍 Running Lint..."
+npm run lint || { echo "❌ Lint failed. Fix errors before committing."; exit 1; }
+
+# 2. Build
+echo "🏗️  Verifying Build..."
+npm run build || { echo "❌ Build failed."; exit 1; }
+
+# 3. Tests
+echo "🧪 Running Tests..."
+npm run test || { echo "❌ Tests failed. Committing blocked."; exit 1; }
+
+echo "✅ All checks passed. Proceeding with commit."

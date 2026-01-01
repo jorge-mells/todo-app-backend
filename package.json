@@ -10,7 +10,8 @@
     "test": "vitest",
     "test:ci": "vitest run",
     "lint": "eslint .",
-    "lint:fix": "eslint . --fix"
+    "lint:fix": "eslint . --fix",
+    "prepare": "husky"
   },
   "repository": {
     "type": "git",
@@ -56,6 +57,7 @@
     "@eslint/js": "^9.34.0",
     "eslint": "^9.34.0",
     "globals": "^16.3.0",
+    "husky": "^9.1.7",
     "nodemon": "^3.1.10",
     "prisma": "^6.15.0",
     "supertest": "^7.1.4",
