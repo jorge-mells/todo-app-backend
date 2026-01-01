@@ -1,7 +1,7 @@
 name: Release
 on:
-  push:
-    tags: ['v*.*.*']
+  workflow_call:
+
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
@@ -15,46 +15,60 @@ jobs:
       packages: write
     steps:
     - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0 
+
     - name: Verify signed commit
       uses: nadock/verified_commits_check@v1
+
+    # Keep Buildx for the 'gha' (GitHub Actions) cache type
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
+
     - name: Log in to Container Registry
       uses: docker/login-action@v3
       with:
         registry: ${{ env.REGISTRY }}
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
-    - name: Extract metadata
-      id: meta
-      uses: docker/metadata-action@v5
-      with:
-        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-        tags: |
-          type=ref,event=tag
-          type=semver,pattern={{version}}
-    - name: Build and push
-      uses: docker/build-push-action@v5
+
+    - name: Build and Push Image
+      uses: docker/build-push-action@v6
       with:
         context: .
-        push: true
-        tags: ${{ steps.meta.outputs.tags }}
-        labels: ${{ steps.meta.outputs.labels }}
-    - name: Create Release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        load: true # Loads the image into the local Docker daemon for Trivy to scan
+        tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+    - name: Scan Image for Vulnerabilities (Trivy)
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: '${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }}'
+        format: 'table'
+        exit-code: '1' 
+        ignore-unfixed: true
+        severity: 'CRITICAL,HIGH'
+
+    - name: Push Image
+      run: |
+        docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }}
+
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v2
       with:
         tag_name: ${{ github.ref_name }}
-        release_name: Release ${{ github.ref_name }}
+        name: Release ${{ github.ref_name }}
         body: |
-          ✨ **New Release** - Please pull this docker image to deploy.
+          ✨ **New Release** - ${{ github.ref_name }}
           📦 **Container:** `${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }}`
-    - name: Trigger Deploy Workflow
-      if: success()
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Trigger Deploy (GitOps)
       uses: peter-evans/repository-dispatch@v3
       with: 
         token: ${{ secrets.GITOPS_TOKEN }}
         repository: jorge-mells/todo-app-devops
         event-type: app-release-success
-        client-payload: '{"image_tag": "${{ steps.vars.outputs.sha_short }}"}'
+        client-payload: '{"image_tag": "${{ github.ref_name }}"}'
